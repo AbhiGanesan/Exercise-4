@@ -52,18 +52,36 @@ svg.append('g')
 //FIXME your code here. Be sure to class each bar as "yearBar"
 //  Consult your Day 5 from Exercise 3 for inspiration
 // Also be aware of the datum() function for the tooltip on mouseover
+svg.selectAll(".yearBar")
+    .data(yearData)
+    .enter()
+    .append("rect")
+    .attr("class", "yearBar")
+    .attr("x", d => xYearScale(d.Year))
+    .attr("y", d => yScale(d.Revenue))
+    .attr("width", xYearScale.bandwidth())
+    .attr("height", d => height - margin.bottom - yScale(d.Revenue))
+    .attr("fill", "steelblue")
+
 
 // Mouseover events for year bars
 d3.selectAll(".yearBar")
     .on("mouseover", function(event)
     {
-        // FIXME your code here
-        console.log("mousing over a year bar")
+        var d = d3.select(this).datum()
+        d3.select(this).attr("fill", "red")
+        // tooltip showing the year and revenue
+        svg.append("text")
+            .attr("class", "yearTip")
+            .attr("x", xYearScale(d.Year) + xYearScale.bandwidth() / 2)
+            .attr("y", yScale(d.Revenue) - 5)
+            .attr("text-anchor", "middle")
+            .text(d.Year + ": " + d.Revenue.toFixed(1))
     })
-    .on("mouseout",function()
+    .on("mouseout", function()
     {
-        // FIXME your code here
-        console.log("mouse leaving a year bar")
+        d3.select(this).attr("fill", "steelblue")
+        d3.selectAll(".yearTip").remove()
     });
 
 // Helper function to keep the click handler shorter
@@ -83,6 +101,21 @@ var sortYearChartByRevenueDescending = true
 d3.select("#svgYear")
     .on("mousedown", function(event)
     {
-        // FIXME your code here
-        console.log("click on year chart" + mouseCoords)
+        var mouseCoords = d3.pointer(event)
+        if (mouseCoords[0] < margin.left)
+        {
+            // clicked the Y axis: sort by revenue
+            yearData.sort((a, b) => sortYearChartByRevenueDescending
+                ? b.Revenue - a.Revenue : a.Revenue - b.Revenue)
+            sortYearChartByRevenueDescending = !sortYearChartByRevenueDescending
+            updateYearAxis()
+        }
+        else if (mouseCoords[1] > height - margin.bottom)
+        {
+            // clicked the X axis: sort by year
+            yearData.sort((a, b) => sortYearDescending
+                ? b.Year - a.Year : a.Year - b.Year)
+            sortYearDescending = !sortYearDescending
+            updateYearAxis()
+        }
     });
